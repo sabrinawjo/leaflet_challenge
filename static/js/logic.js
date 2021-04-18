@@ -1,25 +1,5 @@
-function size(mag){
-  if (mag > 6){
-    return 14
-} else if (mag >= 5){
-    return 12
-} else if (mag >= 4){
-    return 10
-} else if (mag >= 3){
-    return 8
-} else if (mag >= 2){
-    return 6
-} else if (mag >= 1){
-    return 4
-} else {
-    return 2
-}
-}
-
-
-
 var geoData = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
-// var geojson;
+var geojson;
 
 
 var satellitemap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
@@ -40,7 +20,10 @@ var map = L.map("map",{
 satellitemap.addTo(map);
 
 
-
+function circlesize(mag){
+  // console.log(mag)
+  return mag*1000
+}
 
 
 circleArray = []
@@ -50,9 +33,10 @@ circleArray = []
 
 
 d3.json(geoData).then(function(data){
-    console.log(data);
+
+    // console.log(data);
     data.features.forEach((i) => {
-      color = "red";
+      color = "#FF0000";
       if (i.geometry.coordinates[2] > 70 && i.geometry.coordinates[2] <= 90) {
         color = "#FF8C00";
       } else if (i.geometry.coordinates[2] > 50 && i.geometry.coordinates[2] <= 70) {
@@ -64,17 +48,42 @@ d3.json(geoData).then(function(data){
       } else if (i.geometry.coordinates[2] > -10 && i.geometry.coordinates[2] <= 10) {
         color = "#32CD32";
       } 
+      // console.log(circlesize(i.properties.mag))
 
     circleArray.push(L.circle([i.geometry.coordinates[1],i.geometry.coordinates[0]],{
       fillOpacity: 0.7,
       color: color,
       fillColor: color,
-      radius: 10,
+      radius: circlesize(i.properties.mag),
     }))
 
     })
 
-L.layerGroup(circleArray).addTo(map)
+    L.layerGroup(circleArray).addTo(map)
+
+
+    var legend = L.control({ position: "bottomright" });
+    legend.onAdd = function() {
+      var div = L.DomUtil.create("div", "legend");
+      return div
+      // var limits = geojson.options.limits;
+      // var colors = geojson.options.colors;
+      // var labels = [];
+    }
+    legend.addTo(map)
+    legendtag = d3.select(".legend").append("ul")
+    
+    deeplevel = ['<i style="background: #32CD32"></i><span>-10-10</span><br>',
+    '<i style="background: #98FB98"></i><span>10-30</span><br>',
+    '<i style="background: #FFD700"></i><span>30-50</span><br>',
+    '<i style="background: #FFA500"></i><span>50-70</span><br>',
+    '<i style="background: #FF8C00"></i><span>70-90</span><br>',
+    '<i style="background: #FF0000"></i><span>90+</span><br>'
+  ]
+    legendtag.html(deeplevel.join(""))
+
+
+
 
 
 })
